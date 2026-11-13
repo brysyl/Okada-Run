@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const insert = vi.fn();
-vi.mock('./client', () => ({ supabase: { from: () => ({ insert }) } }));
+const invoke = vi.fn();
+vi.mock('./client', () => ({ supabase: { functions: { invoke } } }));
 
 const store = new Map<string, string>();
 beforeEach(() => {
   store.clear();
-  insert.mockReset();
+  invoke.mockReset();
   vi.stubGlobal('localStorage', {
     getItem: (k: string) => store.get(k) ?? null,
     setItem: (k: string, v: string) => void store.set(k, v),
@@ -20,21 +20,45 @@ describe('submitScore', () => {
   const score = { name: 'Tunde', score: 10, coins: 1, distance: 5 };
 
   it('reports remote on success', async () => {
-    insert.mockResolvedValue({ error: null });
+    invoke.mockResolvedValue({ data: { ok: true }, error: null });
     const { submitScore } = await import('./leaderboard');
     expect(await submitScore(score)).toBe('remote');
     expect(store.size).toBe(0);
+    expect(invoke).toHaveBeenCalledWith('submit-score', {
+      body: { name: 'Tunde', score: 10, coins: 1, distance: 5, durationS: 0, maxSpeed: 0, nitroUses: 0 },
+    });
   });
 
-  it('falls back to local when the remote insert errors', async () => {
-    insert.mockResolvedValue({ error: { message: 'boom' } });
+  it('forwards run metrics', async () => {
+    invoke.mockResolvedValue({ data: { ok: true }, error: null });
+    const { submitScore } = await import('./leaderboard');
+    await submitScore({ ...score, durationS: 12.5, maxSpeed: 300, nitroUses: 1 });
+    expect(invoke.mock.calls[0][1].body).toMatchObject({ durationS: 12.5, maxSpeed: 300, nitroUses: 1 });
+  });
+
+  it('falls back to local when the function rejects the score', async () => {
+    invoke.mockResolvedValue({ data: { ok: false, reason: 'score_too_high' }, error: null });
+    const { submitScore } = await import('./leaderboard');
+    expect(await submitScore(score)).toBe('local');
+    expect(store.size).toBe(1);
+  });
+
+  it('falls back to local when invoke throws', async () => {
+    invoke.mockRejectedValue(new Error('network'));
+    const { submitScore } = await import('./leaderboard');
+    expect(await submitScore(score)).toBe('local');
+    expect(store.size).toBe(1);
+  });
+
+  it('falls back to local when the function errors', async () => {
+    invoke.mockResolvedValue({ data: null, error: { message: 'boom' } });
     const { submitScore } = await import('./leaderboard');
     expect(await submitScore(score)).toBe('local');
     expect(store.size).toBe(1);
   });
 
   it('rejects when the local write also fails', async () => {
-    insert.mockResolvedValue({ error: { message: 'boom' } });
+    invoke.mockResolvedValue({ data: null, error: { message: 'boom' } });
     vi.stubGlobal('localStorage', {
       getItem: () => null,
       setItem: () => { throw new Error('quota'); },

@@ -16,5 +16,5 @@
     "noFallthroughCasesInSwitch": true,
     "types": ["vite/client"]
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["src", "vite.config.ts", "supabase/functions/submit-score/validate.ts", "supabase/functions/submit-score/validate.test.ts"]
 }

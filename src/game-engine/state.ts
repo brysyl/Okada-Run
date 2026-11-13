@@ -21,6 +21,8 @@ export function createInitialState(seed = Date.now() >>> 0): GameState {
     spawnTimer: 0.6,
     nextId: 1,
     rng: seed | 0,
+    maxSpeed: 0,
+    nitroUses: 0,
     entities: [],
     particles: [],
     events: [],
@@ -31,5 +33,6 @@ export function startGame(seed?: number): GameState {
   const s = createInitialState(seed);
   s.status = 'playing';
   s.speed = 240;
+  s.maxSpeed = 240;
   return s;
 }

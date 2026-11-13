@@ -40,11 +40,21 @@ See [docs/RELEASE.md](docs/RELEASE.md) for the bundle audit, deploy review and m
 
 Without configuration the game stores scores in `localStorage` (labelled LOCAL). To enable a global realtime leaderboard:
 
-1. Create a Supabase project and run `supabase/migrations/001_leaderboard.sql` in the SQL editor.
-2. Copy `.env.example` to `.env` and set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
-3. Restart the dev server. If a Supabase request fails, scores fall back to localStorage.
+1. Create a Supabase project and apply `supabase/migrations/001_leaderboard.sql` (`supabase db push` or the SQL editor). It is idempotent and removes anonymous inserts from databases that ran the older version.
+2. Set the function secrets: `supabase secrets set IP_HASH_SALT=<random> SCORE_RATE_LIMIT_PER_MINUTE=5 ALLOWED_ORIGIN=https://your-site.example` (see `.env.example`).
+3. Deploy the function: `supabase functions deploy submit-score`.
+4. Copy `.env.example` to `.env` and set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+5. Restart the dev server. If the function call fails or rejects a score, it falls back to localStorage.
 
-Note: the anon insert policy is open by design for a casual game. Add rate limiting or an edge function if you need anti-cheat.
+Scores are submitted to the `submit-score` edge function, which validates them and inserts with the service role. The table is read-only for the anon key.
+
+### Residual risk
+
+- The run metrics (duration, max speed, Nitro pickups) are reported by the client. The function checks that score, distance and coins are consistent with those metrics and with the engine's rules, which raises the cost of cheating, but an attacker who forges self-consistent metrics can still post a plausible, inflated score.
+- There is no replay or input verification, so a bot or modified client playing well is indistinguishable from a real player.
+- Rate limiting is per hashed IP (`x-forwarded-for`); shared IPs may be throttled and attackers can rotate IPs.
+- The engine constants are duplicated in `supabase/functions/submit-score/validate.ts`; a vitest checks they stay in sync.
+- The edge function `index.ts` (Deno) is not covered by the unit tests; only `validate.ts` is.
 
 ## Deploy
 

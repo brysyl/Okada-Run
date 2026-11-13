@@ -60,6 +60,7 @@ function collect(state: GameState, e: Entity): void {
       break;
     case 'nitro':
       state.nitro = NITRO_DURATION;
+      state.nitroUses += 1;
       state.events.push('nitro');
       burst(state, e.x, e.y, '#ff7b00', 16);
       // Turbo surge clears everything dangerous on screen.
@@ -109,6 +110,7 @@ export function update(state: GameState, rawDt: number): GameState {
 
   const base = speedAt(state.time);
   state.speed = state.nitro > 0 ? base * NITRO_SPEED_FACTOR : base;
+  state.maxSpeed = Math.max(state.maxSpeed, state.speed);
   const dy = state.speed * dt;
   state.distance += dy / 10;
   state.score += (dy / 100) * state.multiplier;
