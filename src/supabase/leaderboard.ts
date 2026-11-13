@@ -13,12 +13,18 @@ export async function fetchTopScores(limit = 10): Promise<LeaderboardEntry[]> {
       .order('score', { ascending: false })
       .limit(limit);
     if (!error && data) return data as LeaderboardEntry[];
+    console.warn('[leaderboard] remote fetch failed, showing local scores', error);
   }
   return topLocal(localStorage, limit);
 }
 
-/** Saves to Supabase when configured; always falls back to localStorage on failure. */
-export async function submitScore(score: NewScore): Promise<void> {
+export type SubmitTarget = 'remote' | 'local';
+
+/**
+ * Saves to Supabase when configured and falls back to localStorage on failure.
+ * Resolves with where the score landed; rejects only if the local write also fails.
+ */
+export async function submitScore(score: NewScore): Promise<SubmitTarget> {
   const payload: NewScore = {
     name: sanitizeName(score.name),
     score: Math.max(0, Math.floor(score.score)),
@@ -27,10 +33,12 @@ export async function submitScore(score: NewScore): Promise<void> {
   };
   if (supabase) {
     const { error } = await supabase.from(TABLE).insert(payload);
-    if (!error) return;
+    if (!error) return 'remote';
+    console.warn('[leaderboard] remote insert failed, saving locally', error);
   }
   addLocal(localStorage, payload);
   window.dispatchEvent(new Event(LOCAL_EVENT));
+  return 'local';
 }
 
 /** Live updates: Supabase realtime when configured, otherwise local change events. */

@@ -1,24 +1,27 @@
 import { useState, type FormEvent } from 'react';
 import type { RunResult } from '../hooks/useOkadaGame';
-import { submitScore } from '../supabase/leaderboard';
+import { submitScore, type SubmitTarget } from '../supabase/leaderboard';
 import { GlassPanel } from './GlassPanel';
 import { Leaderboard } from './Leaderboard';
 
 const NAME_KEY = 'okada-run:name';
 
 export function GameOver({ result, onRestart, onMenu }: { result: RunResult; onRestart: () => void; onMenu: () => void }) {
-  const [name, setName] = useState(() => localStorage.getItem(NAME_KEY) ?? '');
-  const [saved, setSaved] = useState(false);
+  const [name, setName] = useState(() => { try { return localStorage.getItem(NAME_KEY) ?? ''; } catch { return ''; } });
+  const [saved, setSaved] = useState<SubmitTarget | null>(null);
+  const [error, setError] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (busy || saved) return;
     setBusy(true);
-    localStorage.setItem(NAME_KEY, name);
+    setError(false);
     try {
-      await submitScore({ name: name || 'RIDER', ...result });
-      setSaved(true);
+      try { localStorage.setItem(NAME_KEY, name); } catch { /* name memory is optional */ }
+      setSaved(await submitScore({ name: name || 'RIDER', ...result }));
+    } catch {
+      setError(true);
     } finally {
       setBusy(false);
     }
@@ -37,13 +40,15 @@ export function GameOver({ result, onRestart, onMenu }: { result: RunResult; onR
             maxLength={12}
             placeholder="YOUR NAME"
             aria-label="Your name"
-            disabled={saved}
+            disabled={saved !== null}
             className="min-w-0 flex-1 rounded-lg border border-white/20 bg-black/30 px-2 py-2 text-[10px] text-white outline-none"
           />
-          <button type="submit" disabled={saved || busy} className="rounded-lg bg-okada px-3 py-2 text-[10px] text-black disabled:opacity-50">
+          <button type="submit" disabled={saved !== null || busy} className="rounded-lg bg-okada px-3 py-2 text-[10px] text-black disabled:opacity-50">
             {saved ? 'SAVED' : 'SAVE'}
           </button>
         </form>
+        {error && <div role="alert" className="text-[9px] text-red-400">COULD NOT SAVE. TRY AGAIN</div>}
+        {saved === 'local' && <div className="text-[9px] text-white/60">SAVED ON THIS DEVICE ONLY</div>}
         <button type="button" onClick={onRestart} className="w-full rounded-xl bg-naija px-4 py-3 text-xs shadow-lg active:scale-95">
           RIDE AGAIN
         </button>

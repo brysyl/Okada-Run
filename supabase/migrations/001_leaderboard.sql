@@ -11,10 +11,23 @@ create index if not exists leaderboard_score_idx on public.leaderboard (score de
 
 alter table public.leaderboard enable row level security;
 
+-- NOTE: inserts are anonymous and scores are client-computed, so this board is
+-- casual-only and can be spoofed. For a competitive board, route inserts through
+-- an edge function with rate limiting and score/distance sanity checks.
+drop policy if exists "leaderboard readable by everyone" on public.leaderboard;
 create policy "leaderboard readable by everyone" on public.leaderboard
   for select using (true);
+drop policy if exists "leaderboard insertable by everyone" on public.leaderboard;
 create policy "leaderboard insertable by everyone" on public.leaderboard
   for insert with check (true);
 
--- Enable realtime updates for the live leaderboard.
-alter publication supabase_realtime add table public.leaderboard;
+-- Enable realtime updates for the live leaderboard (idempotent).
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'leaderboard'
+  ) then
+    alter publication supabase_realtime add table public.leaderboard;
+  end if;
+end $$;
