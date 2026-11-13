@@ -31,8 +31,10 @@ npm run dev        # http://localhost:5173
 npm test           # engine + leaderboard unit tests
 npm run build      # type check + production build into dist/
 npm run preview
-npm run test:e2e   # Playwright smoke test (run `npx playwright install chromium` once)
+npm run test:e2e   # Playwright e2e suite (run `npx playwright install chromium` once)
 ```
+
+The e2e suite (`e2e/okada-run.spec.ts`) checks that the page loads with no console errors, that START moves from the menu to the running game, and that A/D, arrow keys and touch swipes switch lanes. To check the lane, the tests read a read-only `data-lane` attribute on the game canvas (`0` = left, `1` = middle, `2` = right). The game loop writes the engine's target lane to it every frame, and nothing in the app reads it back.
 
 See [docs/RELEASE.md](docs/RELEASE.md) for the bundle audit, deploy review and merge summary.
 

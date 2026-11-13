@@ -70,6 +70,9 @@ export function useOkadaGame(canvasRef: RefObject<HTMLCanvasElement>) {
     s.events.length = 0;
     if (s.status === 'playing') audio.setEngineSpeed(s.speed);
 
+    // Read-only observability hook for e2e tests (see e2e/okada-run.spec.ts).
+    if (canvasRef.current) canvasRef.current.dataset.lane = String(s.targetLane);
+
     const ctx = canvasRef.current?.getContext('2d');
     if (ctx) {
       const scale = (canvasRef.current as HTMLCanvasElement).width / WORLD_W;
