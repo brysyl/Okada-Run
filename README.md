@@ -31,7 +31,10 @@ npm run dev        # http://localhost:5173
 npm test           # engine + leaderboard unit tests
 npm run build      # type check + production build into dist/
 npm run preview
+npm run test:e2e   # Playwright smoke test (run `npx playwright install chromium` once)
 ```
+
+See [docs/RELEASE.md](docs/RELEASE.md) for the bundle audit, deploy review and merge summary.
 
 ## Leaderboard (Supabase, optional)
 
