@@ -48,6 +48,9 @@ export interface GameState {
   spawnTimer: number;
   nextId: number;
   rng: number;
+  /** Run metrics reported with the score (highest speed reached, Nitro pickups). */
+  maxSpeed: number;
+  nitroUses: number;
   entities: Entity[];
   particles: Particle[];
   events: GameEvent[];

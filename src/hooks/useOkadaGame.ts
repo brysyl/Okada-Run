@@ -21,6 +21,10 @@ export interface RunResult {
   score: number;
   coins: number;
   distance: number;
+  /** Game-time seconds survived (client-reported, used by server plausibility checks). */
+  durationS: number;
+  maxSpeed: number;
+  nitroUses: number;
 }
 
 const EMPTY_HUD: Hud = { score: 0, coins: 0, multiplier: 1, lives: 3, shield: 0, nitro: 0, distance: 0 };
@@ -31,7 +35,7 @@ export function useOkadaGame(canvasRef: RefObject<HTMLCanvasElement>) {
   const hudClock = useRef(0);
   const [status, setStatus] = useState<GameStatus>('menu');
   const [hud, setHud] = useState<Hud>(EMPTY_HUD);
-  const [result, setResult] = useState<RunResult>({ score: 0, coins: 0, distance: 0 });
+  const [result, setResult] = useState<RunResult>({ score: 0, coins: 0, distance: 0, durationS: 0, maxSpeed: 0, nitroUses: 0 });
   const [muted, setMuted] = useState(false);
 
   if (!audioRef.current) audioRef.current = new AudioEngine();
@@ -80,9 +84,12 @@ export function useOkadaGame(canvasRef: RefObject<HTMLCanvasElement>) {
     hudClock.current += dt;
     if (wasPlaying && s.status === 'gameover') {
       audio.stopEngine();
-      const r = { score: displayScore(s), coins: s.coins, distance: Math.floor(s.distance) };
+      const r: RunResult = {
+        score: displayScore(s), coins: s.coins, distance: Math.floor(s.distance),
+        durationS: Math.round(s.time * 1000) / 1000, maxSpeed: Math.round(s.maxSpeed * 100) / 100, nitroUses: s.nitroUses,
+      };
       setResult(r);
-      setHud({ ...EMPTY_HUD, ...r, multiplier: s.multiplier, lives: 0 });
+      setHud({ ...EMPTY_HUD, score: r.score, coins: r.coins, distance: r.distance, multiplier: s.multiplier, lives: 0 });
       setStatus('gameover');
     } else if (s.status === 'playing' && hudClock.current > 0.1) {
       hudClock.current = 0;

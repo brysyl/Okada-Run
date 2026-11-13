@@ -24,7 +24,7 @@ Both configs build with `npm run build` and publish `dist`. Changes made:
 - **Vercel (`vercel.json`)**: added `Cache-Control: public, max-age=31536000, immutable` for `/assets/*` (filenames are content-hashed) and the headers `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` and `X-Frame-Options: SAMEORIGIN` for all routes.
 - **Netlify (`netlify.toml`)**: same cache and security headers, and `NODE_VERSION = "20"` pinned.
 - No SPA rewrite is needed because the app is a single page with no client-side routes.
-- Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the host dashboard if you want the global leaderboard. Without them the game uses localStorage.
+- Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the host dashboard if you want the global leaderboard (also apply the migration, set the function secrets and run `supabase functions deploy submit-score`; see README). Without them the game uses localStorage.
 
 ## 3. Smoke test
 

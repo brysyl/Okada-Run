@@ -157,3 +157,19 @@ describe('update', () => {
     expect(s.distance).toBeGreaterThan(0);
   });
 });
+
+describe('run metrics', () => {
+  it('tracks max speed and nitro pickups', () => {
+    const s = startGame(1);
+    s.spawnTimer = 99;
+    expect(s.nitroUses).toBe(0);
+    update(s, 0.016);
+    const base = s.maxSpeed;
+    expect(base).toBeGreaterThanOrEqual(240);
+    put(s, 'nitro', s.playerX);
+    update(s, 0.016);
+    expect(s.nitroUses).toBe(1);
+    update(s, 0.016);
+    expect(s.maxSpeed).toBeGreaterThan(base * 1.9);
+  });
+});
