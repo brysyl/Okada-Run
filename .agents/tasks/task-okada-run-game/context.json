@@ -1,0 +1,16 @@
+{
+"project_type":"Vite + React 18 + TypeScript canvas arcade game (greenfield)",
+"language":"TypeScript",
+"build_system":"npm, Vite, Tailwind CSS, vitest",
+"test_framework":"vitest for pure game-engine logic",
+"build_command":"npm run build (tsc --noEmit && vite build)",
+"test_command":"npm test (vitest run)",
+"verification_instructions":"npm install; npx tsc --noEmit; npm test; npm run build",
+"snapshot_or_generated_files":null,
+"setup_instructions":"npm install",
+"environment_constraints":"No Supabase credentials; leaderboard must fall back to localStorage when VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY absent. Do not push. Work on branch feature/okada-run-game and commit.",
+"contribution_requirements":"None in repo. README.md and LICENSE exist.",
+"key_patterns":"src/game-engine (pure TS, no React), src/components, src/hooks, src/supabase, src/audio; rAF loop cleaned up on unmount",
+"relevant_files":["README.md"],
+"directory_structure":"greenfield; repo root /projects/sandbox/Okada-Run"
+}
