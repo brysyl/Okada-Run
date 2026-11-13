@@ -1,0 +1,16 @@
+{
+ "task_id": "task-okada-run-game",
+ "task_description": "Build Okada Run 3-lane arcade runner",
+ "status": "completed",
+ "feature_order": [
+  "FEAT-001"
+ ],
+ "blocked_reason": null,
+ "verification": {
+  "build": "pass",
+  "tests": "pass",
+  "test_quality": "pass",
+  "docker_build": "skipped",
+  "summary": "tsc, 22 vitest tests, vite build pass; review v2 APPROVED"
+ }
+}
